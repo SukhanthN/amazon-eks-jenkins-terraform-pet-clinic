@@ -6,7 +6,7 @@ spec:
   selector:
     matchLabels:
       app: petclinic
-  replicas: 1 
+  replicas: 3 
   template: 
     metadata:
       labels:
@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: petclinic
-        image: sevenajay/petclinic-1.0
+        image: sukhanth1/pet-clinc
         ports:
         - containerPort: 8080
         imagePullPolicy: Always
@@ -24,7 +24,7 @@ kind: Service
 metadata:
   name: petclinic
 spec:
-  type: LoadBalancer
+  type: NodePort
   selector:
     app: petclinic
   ports:
