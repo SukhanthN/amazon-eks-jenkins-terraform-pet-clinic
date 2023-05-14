@@ -18,7 +18,7 @@ pipeline {
                 }
             }
         }
-        stage ("docker push") {
+        /*stage ("docker push") {
             steps {
                 script {
                     withCredentials([string(credentialsId: 'newdocker', variable: 'docker')]) {
@@ -27,7 +27,19 @@ pipeline {
 }
                 }
             }
+        }*/
+        stage('Push image to Hub'){
+            steps {
+                script {
+                   withCredentials([string(credentialsId: 'docker_pwd', variable: 'docker')])  {
+                   sh 'docker login -u sukhanth1 -p ${docker}'
+}
+                   sh 'docker push sukhanth1/pet-clinc:2.0'
+                }
+            }
         }
+        
+        
         stage ("k8s deploy") {
             steps {
                 script {
