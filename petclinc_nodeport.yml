@@ -14,10 +14,11 @@ spec:
     spec:
       containers:
       - name: petclinic
-        image: sukhanth1/pet-clinc
+        image: sukhanth1/pet-clinc:2.0
+        imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 8080
-        imagePullPolicy: Always
+          - containerPort: 8080
+        
 ---
 apiVersion: v1
 kind: Service
