@@ -1,58 +1,38 @@
 pipeline {
-    agent any
-       triggers {
-        pollSCM "* * * * *"
-       }
+    agent any 
     stages {
-        stage('Build Application') { 
+        stage ('git checkout') {
             steps {
-                echo '=== Building Petclinic Application ==='
-                sh 'mvn -B -DskipTests clean package' 
+                checkout scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/SukhanthN/pet-clinic.git']])
+            }
+        }   
+        stage("build") {
+            steps {
+                sh "mvn clean install"
             }
         }
-        stage('Test Application') {
+        stage ("build image") {
             steps {
-                echo '=== Testing Petclinic Application ==='
-                sh 'mvn test'
-            }
-            post {
-                always {
-                    junit 'target/surefire-reports/*.xml'
-                }
-            }
-        }
-        stage('Build Docker Image') {
-            when {
-                branch 'master'
-            }
-            steps {
-                echo '=== Building Petclinic Docker Image ==='
                 script {
-                    app = docker.build("ibuchh/petclinic-spinnaker-jenkins")
+                    sh "docker build -t sukhanth1/pet-clinc:2.0 ."
                 }
             }
         }
-        stage('Push Docker Image') {
-            when {
-                branch 'master'
-            }
+        stage ("docker push") {
             steps {
-                echo '=== Pushing Petclinic Docker Image ==='
                 script {
-                    GIT_COMMIT_HASH = sh (script: "git log -n 1 --pretty=format:'%H'", returnStdout: true)
-                    SHORT_COMMIT = "${GIT_COMMIT_HASH[0..7]}"
-                    docker.withRegistry('https://registry.hub.docker.com', 'dockerHubCredentials') {
-                        app.push("$SHORT_COMMIT")
-                        app.push("latest")
-                    }
+                    withCredentials([string(credentialsId: 'newdocker', variable: 'docker')]) {
+                    sh "docker login -u sukhanth1 -p ${docker}"
+                    sh "docker push sukhanth1/pet-clinc:2.0"
+}
                 }
             }
         }
-        stage('Remove local images') {
+        stage ("k8s deploy") {
             steps {
-                echo '=== Delete the local docker images ==='
-                sh("docker rmi -f ibuchh/petclinic-spinnaker-jenkins:latest || :")
-                sh("docker rmi -f ibuchh/petclinic-spinnaker-jenkins:$SHORT_COMMIT || :")
+                script {
+                    kubernetesDeploy (configs: 'petclinc_nodeport.yml',kubeconfigId: 'll')
+                }
             }
         }
     }
