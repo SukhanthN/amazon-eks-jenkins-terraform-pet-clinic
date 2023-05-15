@@ -6,7 +6,7 @@ pipeline {
                 checkout scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/SukhanthN/pet-clinic.git']])
             }
         }   
-        stage("build") {
+        stage("Code build") {
             steps {
                 sh "mvn clean install"
             }
